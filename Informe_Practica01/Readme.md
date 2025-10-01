@@ -11,9 +11,8 @@ Se buscó fortalecer conocimientos en el uso de Android Studio, diseño de inter
 ## 📷 Capturas de pantalla
 A continuación se presentan imágenes de la aplicación en ejecución:
 
-
-
-*(Reemplazar estas imágenes por capturas reales tomadas del emulador o dispositivo físico)*
+![Pantalla principal](./pantalla1.png)  
+![Cálculo de edad](./pantalla2.png) 
 
 ## ✅ Conclusiones
 1. Se concluye que el desarrollo de la aplicación permitió que el grupo se familiarice con Android Studio y el uso de Kotlin para la creación de interfaces y la implementación de lógica básica.  
