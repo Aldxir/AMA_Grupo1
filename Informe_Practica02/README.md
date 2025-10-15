@@ -249,5 +249,11 @@ C# encaja cuando se requiere gobernanza estricta de tipos, rendimiento y ecosist
 1.  Preferir ?. y ?: (Elvis) y evitar !! salvo casos muy controlados. Para invariantes, usar requireNotNull/checkNotNull con mensajes claros.
 
 2.  Representar resultados (éxito/error/cargando) y flujos de UI con sealed class y data class; exigir when exhaustivo para que el compilador ayude a detectar casos no manejados. 
+## 📷 Capturas de pantalla
+A continuación se presentan imágenes de la aplicación en ejecución:
+
+![Funcionalidad](./pantalla1.png)  
+![Funcionalidad](./pantalla2.png) 
 
 ## 📲 Archivo APK generado
+Alden_Num02.apk
