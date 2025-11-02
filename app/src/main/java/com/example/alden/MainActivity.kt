@@ -1,30 +1,153 @@
 package com.example.alden
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.RecyclerView
 import com.example.alden.data.AccessRepository
 import com.example.alden.data.UserRepository
+import com.example.alden.flow.attendance.AttendanceRepositoryImpl
+import com.example.alden.flow.auth.AuthSourceImpl
+import com.example.alden.flow.location.LocationSourceImpl
+import com.example.alden.flow.policy.PolicyEngine
+import com.example.alden.flow.time.TimeSourceImpl
 import com.example.alden.models.Accion
 import com.example.alden.models.RegistroAcceso
+import com.example.alden.models.Rol
 import com.example.alden.models.Ubicacion
+import com.example.alden.models.Usuario
+import com.example.alden.notifications.NotificationChannels
+import com.example.alden.notifications.NotificationGatewayLocal
+import com.example.alden.presentation.MainViewModel
+import com.example.alden.presentation.MainViewModelFactory
+import com.example.alden.presentation.state.AppEvent
 import com.example.alden.rules.displayName
 import com.example.alden.services.AttendanceService
+import com.example.alden.ui.RegistroAdapter
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var viewModel: MainViewModel
+    private lateinit var notifier: NotificationGatewayLocal
+    private val requestPostNotifications = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* granted -> opcionalmente muestra un Toast si lo niegan */ }
+
+    private lateinit var adapter: RegistroAdapter
+
+    // Usuarios demo
+    private val adminDemo = Usuario(
+        id = "admin", nombre = "Admin",
+        correo = "admin@epn.edu.ec", edad = 30,
+        rol = Rol.ADMIN, enabled = true
+    )
+    private val userDemo = Usuario(
+        id = "u1", nombre = "Juan Pérez",
+        correo = "juan@epn.edu.ec", edad = 22,
+        rol = Rol.USER, enabled = true
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Referencias UI
+        val tvUsuario = findViewById<TextView>(R.id.tvUsuario)
+        val tvEstado  = findViewById<TextView>(R.id.tvEstado)
+        val btnLoginUser  = findViewById<Button>(R.id.btnLoginUser)
+        val btnLoginAdmin = findViewById<Button>(R.id.btnLoginAdmin)
+        val btnLogout     = findViewById<Button>(R.id.btnLogout)
+        val btnDentro = findViewById<Button>(R.id.btnDentro)
+        val btnFuera  = findViewById<Button>(R.id.btnFuera)
+        val btnEntrada = findViewById<Button>(R.id.btnEntrada)
+        val btnSalida  = findViewById<Button>(R.id.btnSalida)
+        val rv = findViewById<RecyclerView>(R.id.rvRegistros)
+
+        // RecyclerView
+        adapter = RegistroAdapter()
+        rv.adapter = adapter
+        rv.setHasFixedSize(true)
+
+        // Clicks
+        btnLoginUser.setOnClickListener  { viewModel.loginAsAdminOrUser(userDemo) }
+        btnLoginAdmin.setOnClickListener { viewModel.loginAsAdminOrUser(adminDemo) }
+        btnLogout.setOnClickListener     { viewModel.logout() }
+
+        btnDentro.setOnClickListener { viewModel.setZone(Ubicacion.DENTRO_RANGO) }
+        btnFuera.setOnClickListener  { viewModel.setZone(Ubicacion.FUERA_RANGO) }
+
+        btnEntrada.setOnClickListener { viewModel.registrar(Accion.ENTRADA) }
+        btnSalida.setOnClickListener  { viewModel.registrar(Accion.SALIDA) }
 
 
+        // 1) Crear dependencias
+        val auth = AuthSourceImpl()
+        val location = LocationSourceImpl(Ubicacion.DENTRO_RANGO)
+        val time = TimeSourceImpl()
+        val attendance = AttendanceRepositoryImpl()
+        val policy = PolicyEngine(auth, location, time)
+
+        // 2) Crear VM con Factory (inyectar dependencias)
+        val factory = MainViewModelFactory(auth, location, time, attendance, policy)
+        viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
+
+        // 3) Notificaciones: crear canales y preparar gateway
+        NotificationChannels.ensureCreated(this)
+        notifier = NotificationGatewayLocal(this)
+        if (Build.VERSION.SDK_INT >= 33) {
+            requestPostNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        // 3) Coleccionar estado y eventos (UI real: actualiza vistas/botones/lista)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.appState.collect { state ->
+                        // Usuario (nombre y rol) o “(sin usuario)”
+                        tvUsuario.text = state.usuario?.let { "${it.nombre} (${it.rol})" } ?: "(sin usuario)"
+
+                        // Texto de estado
+                        tvEstado.text = state.mensajeEstado
+
+                        // Habilitar/Deshabilitar botones (Admin no registra)
+                        val esAdmin = state.usuario?.rol == Rol.ADMIN
+                        val habilitado = state.puedeRegistrar && !esAdmin
+                        btnEntrada.isEnabled = habilitado
+                        btnSalida.isEnabled  = habilitado
+
+                        // Lista de registros
+                        adapter.submit(state.registros)
+                    }
+                }
+                launch {
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            is AppEvent.ShowToast ->
+                                Toast.makeText(this@MainActivity, event.message, Toast.LENGTH_SHORT).show()
+                            is AppEvent.Notify -> notifier.handle(event)
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
         // Declarar variables con al menos 5 tipos diferentes.
         Log.d("TAREAS_ALDEN", "--- Tarea 1: Variables ---")
         val nombreApp: String = "Alden"
@@ -90,9 +213,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 txtResultado.text = "Ingrese una fecha válida"
             }
-        }
+        } */
 
-
+        /*
         // ========================= Practica 3 =====================================
         Log.d("Practica 3", "=== Sistema de Asistencias (demo de práctica) ===")
         Log.d("", "Elige perfil:\n 1) Admin\n 2) User")
@@ -104,16 +227,29 @@ class MainActivity : AppCompatActivity() {
                 ejecutarPruebas()
             }
         }
-
+        */
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Arranca el “ticker” de la hora (p.ej., cada 60s)
+        viewModel.startClock(60_000L)
+    }
+
+    override fun onStop() {
+        // Detén el ticker para ahorrar batería
+        viewModel.stopClock()
+        super.onStop()
+    }
+
+    /*
     // TAREA 2: Definición de la función convencional
     private fun generarMensajeBienvenida(nombreUsuario: String): String {
         return "¡Bienvenido, $nombreUsuario, a la App Alden!"
-    }
+    } */
 
-
+    /*
     // =================== Practica 3 ==========================
     /** Flujo Admin: solo listar, no registra. */
     private fun flujoAdmin() {
@@ -185,6 +321,8 @@ class MainActivity : AppCompatActivity() {
      *  3) Ubicación fuera del rango ⇒ DESHABILITADO
      *  4) Admin visualiza todos los registros y no registra asistencias
      */
+
+
     private fun ejecutarPruebas() {
         val admin = UserRepository.getAdmin()
         val user = UserRepository.getAnyEnabledUser()
@@ -219,11 +357,12 @@ class MainActivity : AppCompatActivity() {
 
         // Extra: muestra franja horaria válida para claridad
         println("\n* Nota: horario permitido = ${LocalTime.of(6,0)} a ${LocalTime.of(20,0)} (inclusive).")
-    }
+    } */
 
 }
 
 
+/*
 // TAREA 3: Definición de la clase tradicional
 class Proyecto(val nombre: String) {
     fun mostrarEstado() {
@@ -241,4 +380,4 @@ fun Usuario.nombreFormateado(): String {
 
 fun Usuario.esMayorDeEdad(): Boolean {
     return this.edad >= 18
-}
+}*/
