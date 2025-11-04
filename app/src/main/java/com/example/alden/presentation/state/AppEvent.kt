@@ -1,5 +1,7 @@
 package com.example.alden.presentation.state
 
+import com.example.alden.notifications.NotificationChannelType
+
 sealed interface AppEvent {
     // Evento para notificación local (NotificationCompat)
     data class Notify(
@@ -11,6 +13,3 @@ sealed interface AppEvent {
     // Evento efímero para UI (Toast/Snackbar)
     data class ShowToast(val message: String) : AppEvent
 }
-
-// Canales lógicos
-enum class NotificationChannelType { ASISTENCIA, ALERTAS }

@@ -5,23 +5,35 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 
+
+enum class NotificationChannelType { ASISTENCIA, ALERTAS }
+
+fun NotificationChannelType.channelId(): String = when (this) {
+    NotificationChannelType.ASISTENCIA -> NotificationChannels.CH_ASISTENCIA
+    NotificationChannelType.ALERTAS    -> NotificationChannels.CH_ALERTAS
+}
 object NotificationChannels {
-    const val CH_ASISTENCIA = "asistencia"
-    const val CH_ALERTAS = "alertas"
+    const val CH_ASISTENCIA = "asistencia_v2"
+    const val CH_ALERTAS = "alertas_v2"
 
     fun ensureCreated(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val asistencia = NotificationChannel(
-            CH_ASISTENCIA, "Asistencia", NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Registros válidos de asistencia" }
+            nm.createNotificationChannel(
+                NotificationChannel(CH_ASISTENCIA, "Asistencia",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply { description = "Notificaciones de asistencia" }
+            )
 
-        val alertas = NotificationChannel(
-            CH_ALERTAS, "Alertas", NotificationManager.IMPORTANCE_HIGH
-        ).apply { description = "Fuera de horario o fuera de zona" }
-
-        nm.createNotificationChannel(asistencia)
-        nm.createNotificationChannel(alertas)
+            nm.createNotificationChannel(
+                NotificationChannel(CH_ALERTAS, "Alertas",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Bloqueos por horario/rango"
+                    enableVibration(true)
+                }
+            )
+        }
     }
 }

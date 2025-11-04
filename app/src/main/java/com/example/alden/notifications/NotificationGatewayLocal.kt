@@ -1,4 +1,5 @@
 package com.example.alden.notifications
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,19 +7,27 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.alden.presentation.state.AppEvent
-import com.example.alden.presentation.state.NotificationChannelType
 import com.example.alden.R
 import kotlin.random.Random
 
 class NotificationGatewayLocal(
     private val context: Context
 ) {
+    private val nm = NotificationManagerCompat.from(context)
     //@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun handle(event: AppEvent) {
-        when (event) {
-            is AppEvent.Notify -> showNotify(event)
-            is AppEvent.ShowToast -> { /* el Toast lo manejas en la Activity */ }
-        }
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun handle(e: AppEvent.Notify) {
+        val id = e.channel.channelId() // <-- extensión top-level
+        val notif = NotificationCompat.Builder(context, id)
+            .setSmallIcon(R.drawable.ic_notification) // asegúrate que exista
+            .setContentTitle(e.title)
+            .setContentText(e.body)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // < Android O
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .build()
+
+        nm.notify(Random.nextInt(), notif)
     }
 
     //@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -30,7 +39,7 @@ class NotificationGatewayLocal(
         }
 
         val notif = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_notification) // pon un ícono existente del proyecto
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(e.title)
             .setContentText(e.body)
             .setAutoCancel(true)

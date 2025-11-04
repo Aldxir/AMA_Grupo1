@@ -12,9 +12,9 @@ import com.example.alden.models.RegistroAcceso
 import com.example.alden.models.Rol
 import com.example.alden.models.Ubicacion
 import com.example.alden.models.Usuario
+import com.example.alden.notifications.NotificationChannelType
 import com.example.alden.presentation.state.AppEvent
 import com.example.alden.presentation.state.AppState
-import com.example.alden.presentation.state.NotificationChannelType
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted

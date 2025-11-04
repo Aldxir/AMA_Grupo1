@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     ) { /* granted -> opcionalmente muestra un Toast si lo niegan */ }
 
     private lateinit var adapter: RegistroAdapter
+    private lateinit var time: TimeSourceImpl
 
     // Usuarios demo
     private val adminDemo = Usuario(
@@ -99,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         // 1) Crear dependencias
         val auth = AuthSourceImpl()
         val location = LocationSourceImpl(Ubicacion.DENTRO_RANGO)
-        val time = TimeSourceImpl()
+        time = TimeSourceImpl()
         val attendance = AttendanceRepositoryImpl()
         val policy = PolicyEngine(auth, location, time)
 
@@ -125,14 +126,17 @@ class MainActivity : AppCompatActivity() {
                         // Texto de estado
                         tvEstado.text = state.mensajeEstado
 
-                        // Habilitar/Deshabilitar botones (Admin no registra)
-                        val esAdmin = state.usuario?.rol == Rol.ADMIN
-                        val habilitado = state.puedeRegistrar && !esAdmin
-                        btnEntrada.isEnabled = habilitado
-                        btnSalida.isEnabled  = habilitado
+                        // Habilitar si hay USER habilitado (independiente de la política)
+                        val esUser          = (state.usuario?.rol == Rol.USER)
+                        val userHabilitado  = (state.usuario?.enabled == true)
+
+                        btnEntrada.isEnabled = esUser && userHabilitado
+                        btnSalida.isEnabled  = esUser && userHabilitado
 
                         // Lista de registros
                         adapter.submit(state.registros)
+
+                        Log.d("POLICY", "hora=${state.horaActual} puede=${state.puedeRegistrar} zone=${state.ubicacion} user=${state.usuario?.rol} enabled=${state.usuario?.enabled}")
                     }
                 }
                 launch {
@@ -233,14 +237,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        // Arranca el “ticker” de la hora (p.ej., cada 60s)
-        viewModel.startClock(60_000L)
+        time.start(1000L) // emite la hora real cada segundo
     }
 
     override fun onStop() {
         // Detén el ticker para ahorrar batería
         viewModel.stopClock()
         super.onStop()
+        time.stop()
     }
 
     /*
