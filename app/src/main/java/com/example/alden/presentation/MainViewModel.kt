@@ -54,12 +54,18 @@ class MainViewModel(
         attendanceRepository.recordsFlow,
         canRegisterState
     ) { user, zone, now, records, canReg ->
+        val visibles = when {
+            user == null -> emptyList()
+            user.rol == Rol.ADMIN -> records                             // Admin ve todo
+            else -> records.filter { it.usuario.id == user.id }          // User solo los suyos
+        }.sortedByDescending { it.hora }
+
         AppState(
             usuario = user,
             ubicacion = zone,
             horaActual = now,
             puedeRegistrar = canReg,
-            registros = records,
+            registros = visibles,
             mensajeEstado = if (canReg) "HABILITADO" else "DESHABILITADO"
         )
     }.stateIn(
@@ -77,7 +83,6 @@ class MainViewModel(
 
     // --- API para la UI ---
 
-    fun startClock(tickMillis: Long = 60_000L) = timeSource.start(tickMillis)
     fun stopClock() = timeSource.stop()
 
     fun setZone(zone: Ubicacion) = viewModelScope.launch {

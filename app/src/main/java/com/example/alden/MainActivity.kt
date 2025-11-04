@@ -1,6 +1,7 @@
 package com.example.alden
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -10,10 +11,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alden.data.AccessRepository
 import com.example.alden.data.UserRepository
@@ -64,6 +67,16 @@ class MainActivity : AppCompatActivity() {
         rol = Rol.USER, enabled = true
     )
 
+    private val user2 = Usuario(
+        id = "u2", nombre = "María López",
+        correo = "maria@epn.edu.ec", edad = 21,
+        rol = Rol.USER, enabled = true
+    )
+
+    private val demoUsers = listOf(userDemo, user2)
+
+    private var nextUserIdx = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -84,9 +97,15 @@ class MainActivity : AppCompatActivity() {
         adapter = RegistroAdapter()
         rv.adapter = adapter
         rv.setHasFixedSize(true)
+        rv.layoutManager = LinearLayoutManager(this)
 
         // Clicks
-        btnLoginUser.setOnClickListener  { viewModel.loginAsAdminOrUser(userDemo) }
+        btnLoginUser.setOnClickListener  {
+            val u = demoUsers[nextUserIdx]
+            nextUserIdx = (nextUserIdx + 1) % demoUsers.size
+            viewModel.loginAsAdminOrUser(u)
+            Toast.makeText(this, "Login: ${u.nombre}", Toast.LENGTH_SHORT).show()
+        }
         btnLoginAdmin.setOnClickListener { viewModel.loginAsAdminOrUser(adminDemo) }
         btnLogout.setOnClickListener     { viewModel.logout() }
 
@@ -144,7 +163,18 @@ class MainActivity : AppCompatActivity() {
                         when (event) {
                             is AppEvent.ShowToast ->
                                 Toast.makeText(this@MainActivity, event.message, Toast.LENGTH_SHORT).show()
-                            is AppEvent.Notify -> notifier.handle(event)
+
+                            is AppEvent.Notify -> {
+                                if (hasPostNotifications()) {
+                                    notifier.handle(event)
+                                } else if (Build.VERSION.SDK_INT >= 33) {
+                                    requestPostNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    // fallback visible por si el usuario niega el permiso
+                                    Toast.makeText(this@MainActivity, "${event.title}: ${event.body}", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    notifier.handle(event)                 // < API 33 no requiere permiso
+                                }
+                            }
                         }
                     }
                 }
@@ -234,6 +264,14 @@ class MainActivity : AppCompatActivity() {
         */
 
     }
+
+    private fun hasPostNotifications(): Boolean =
+        if (Build.VERSION.SDK_INT >= 33)
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        else true
+
 
     override fun onStart() {
         super.onStart()

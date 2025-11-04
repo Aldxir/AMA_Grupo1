@@ -3,9 +3,12 @@ package com.example.alden.notifications
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.alden.presentation.state.AppEvent
 import com.example.alden.R
 import kotlin.random.Random
@@ -15,8 +18,16 @@ class NotificationGatewayLocal(
 ) {
     private val nm = NotificationManagerCompat.from(context)
     //@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    //@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    @SuppressLint("MissingPermission")
     fun handle(e: AppEvent.Notify) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val granted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) return
+        }
+
         val id = e.channel.channelId() // <-- extensión top-level
         val notif = NotificationCompat.Builder(context, id)
             .setSmallIcon(R.drawable.ic_notification) // asegúrate que exista
