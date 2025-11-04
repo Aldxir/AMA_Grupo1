@@ -110,7 +110,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Integr 1"
+                    android:text="Aldair Flor"
                     android:textSize="18sp"
                     android:textAlignment="center" />
 
@@ -143,7 +143,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Integr 2"
+                    android:text="Dennis Pérez"
                     android:textSize="18sp"
                     android:textAlignment="center" />
 
