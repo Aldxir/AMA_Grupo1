@@ -63,28 +63,28 @@ La regla principal es:
 A continuación se presentan imágenes de la aplicación en ejecución:
 
 ---
-Pantalla principal de la aplicacion
+## Pantalla principal de la aplicacion
 ![Funcionalidad](./pantalla1.png)
----
-Login del usuario Juan Pérez
+
+## Login del usuario Juan Pérez
 ![Funcionalidad](./pantalla2.png)
----
-Se elige DENTRO RANGO y luego ENTRADA para registrar la entrada del usuario
+
+## Se elige DENTRO RANGO y luego ENTRADA para registrar la entrada del usuario
 ![Funcionalidad](./pantalla3.png)
----
-Si se elige FUERA RANGO y se intenta registrar, sale un mensaje de DESHABILITADO
+
+## Si se elige FUERA RANGO y se intenta registrar, sale un mensaje de DESHABILITADO
 ![Funcionalidad](./pantalla4.png)
----
-Se hace login de la usuario Maria Lopez
+
+## Se hace login de la usuario Maria Lopez
 ![Funcionalidad](./pantalla5.png)
----
-Se hace un registro de su entrada
+
+## Se hace un registro de su entrada
 ![Funcionalidad](./pantalla6.png)
----
-Se hace un registro de su salida
+
+## Se hace un registro de su salida
 ![Funcionalidad](./pantalla7.png)
----
-El administrador puede ver todos los registros
+
+## El administrador puede ver todos los registros
 ![Funcionalidad](./pantalla8.png)
 
 ---
