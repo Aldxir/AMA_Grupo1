@@ -6,5 +6,6 @@ data class Usuario(
     val correo: String,
     val edad: Int,
     val rol: Rol,
-    val enabled: Boolean
+    val enabled: Boolean,
+    val password: String = ""
 )
