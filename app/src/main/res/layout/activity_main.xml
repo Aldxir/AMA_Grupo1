@@ -3,63 +3,173 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Fila de integrantes -->
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <!-- Foto y datos de integrante 1 -->
-
-        <ImageView
-            android:id="@+id/img1"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center"
-            android:src="@drawable/aldair" />
+        android:orientation="vertical" android:padding="16dp"
+        android:layout_width="match_parent" android:layout_height="match_parent">
 
         <TextView
-            android:text="Aldair Flor"
+            android:id="@+id/tvUsuario"
+            android:text="(sin usuario)"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvEstado"
+            android:text="—"
             android:textSize="18sp"
-            android:layout_marginTop="8dp"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="4dp" android:paddingBottom="8dp"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnLoginUser"
+                android:text="Login User"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnLoginAdmin"
+                android:text="Login Admin"
+                android:layout_marginStart="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnLogout"
+                android:text="Logout"
+                android:layout_marginStart="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btnDentro"
+                android:text="Dentro rango"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnFuera"
+                android:text="Fuera rango"
+                android:layout_marginStart="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btnEntrada"
+                android:text="ENTRADA"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnSalida"
+                android:text="SALIDA"
+                android:layout_marginStart="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- ====== Fila de integrantes (NUEVO) ====== -->
+        <LinearLayout
+            android:id="@+id/rowIntegrantes"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:layout_gravity="center"
-            />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="12dp"
+            android:padding="8dp"
+            android:weightSum="2">
+
+            <!-- Integrante 1 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <ImageView
+                    android:id="@+id/img1"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
+                    android:src="@drawable/aldair"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Foto integrante 1" />
+
+                <TextView
+                    android:id="@+id/txtNombre1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Aldair Flor"
+                    android:textSize="18sp"
+                    android:textAlignment="center" />
+
+                <TextView
+                    android:id="@+id/txtRol1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Programador"
+                    android:textAlignment="center" />
+            </LinearLayout>
+
+            <!-- Integrante 2 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <ImageView
+                    android:id="@+id/img2"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
+                    android:src="@drawable/aldair"
+                android:scaleType="centerCrop"
+                android:contentDescription="Foto integrante 2" />
+
+                <TextView
+                    android:id="@+id/txtNombre2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Dennis Pérez"
+                    android:textSize="18sp"
+                    android:textAlignment="center" />
+
+                <TextView
+                    android:id="@+id/txtRol2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Programador"
+                    android:textAlignment="center" />
+            </LinearLayout>
+        </LinearLayout>
+        <!-- ====== Fin fila de integrantes ====== -->
 
         <TextView
-            android:text="Programador"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:layout_gravity="center"/>
+            android:text="Registros:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
-        <EditText
-            android:id="@+id/txtFecha"
-            android:layout_width="380dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:hint="Ingrese fecha de nacimiento (dd/MM/yyyy)"
-            android:inputType="date" />
-
-
-        <Button
-            android:id="@+id/btnCalcular"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_gravity="center"
-            android:text="Calcular Edad" />
-
-        <TextView
-            android:id="@+id/txtResultado"
-            android:text="Edad: "
-            android:textSize="18sp"
-            android:layout_marginTop="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
-
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRegistros"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
     </LinearLayout>
+
+
+
 </ScrollView>

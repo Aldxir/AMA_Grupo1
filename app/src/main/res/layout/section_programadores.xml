@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="12dp">
+
+    <TextView
+        android:id="@+id/tvProgTitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Programadores"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <!-- Programador 1 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgProg1"
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:background="@drawable/bg_avatar"
+                android:clipToOutline="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/aldair" />
+
+            <TextView
+                android:id="@+id/tvProg1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aldair Flor"
+                android:layout_marginTop="6dp"/>
+        </LinearLayout>
+
+        <!-- Programador 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgProg2"
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:background="@drawable/bg_avatar"
+                android:clipToOutline="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/zb" />
+
+            <TextView
+                android:id="@+id/tvProg2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dennis Perez"
+                android:layout_marginTop="6dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>
