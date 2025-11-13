@@ -53,5 +53,10 @@
             android:textSize="14sp"
             android:layout_marginTop="12dp" />
 
+        <include
+            layout="@layout/section_programadores"
+            android:id="@+id/sectionProgramadores"/>
+
+
     </LinearLayout>
 </ScrollView>

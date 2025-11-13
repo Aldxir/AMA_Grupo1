@@ -29,7 +29,7 @@ object UserRepository {
             correo = "dennis@ejemplo.com",
             edad = 30,
             rol = Rol.USER,
-            enabled = false,
+            enabled = true,
             password = "dennis123"
         )
     )

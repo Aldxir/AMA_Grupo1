@@ -20,10 +20,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alden.data.AccessRepository
 import com.example.alden.data.UserRepository
+import com.example.alden.di.Singletons
 import com.example.alden.flow.attendance.AttendanceRepositoryImpl
 import com.example.alden.flow.auth.AuthSourceImpl
 import com.example.alden.flow.location.LocationSourceImpl
 import com.example.alden.flow.policy.PolicyEngine
+import com.example.alden.flow.time.TimeSource
 import com.example.alden.flow.time.TimeSourceImpl
 import com.example.alden.models.Accion
 import com.example.alden.models.RegistroAcceso
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity() {
     ) { /* granted -> opcionalmente muestra un Toast si lo niegan */ }
 
     private lateinit var adapter: RegistroAdapter
-    private lateinit var time: TimeSourceImpl
+    private val time: TimeSource = Singletons.time
 
     // Usuarios demo
     private val adminDemo = Usuario(
@@ -117,14 +119,13 @@ class MainActivity : AppCompatActivity() {
 
 
         // 1) Crear dependencias
-        val auth = AuthSourceImpl()
-        val location = LocationSourceImpl(Ubicacion.DENTRO_RANGO)
-        time = TimeSourceImpl()
-        val attendance = AttendanceRepositoryImpl()
-        val policy = PolicyEngine(auth, location, time)
-
-        // 2) Crear VM con Factory (inyectar dependencias)
-        val factory = MainViewModelFactory(auth, location, time, attendance, policy)
+        val factory = MainViewModelFactory(
+            Singletons.auth,
+            Singletons.location,
+            Singletons.time,
+            Singletons.attendance,
+            Singletons.policy
+        )
         viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
 
         // 3) Notificaciones: crear canales y preparar gateway

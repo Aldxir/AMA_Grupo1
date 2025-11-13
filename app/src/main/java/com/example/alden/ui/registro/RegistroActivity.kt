@@ -13,15 +13,13 @@ import android.widget.Button
 import android.widget.Toast
 import com.example.alden.data.UserRepository
 import com.example.alden.models.Accion
-import com.example.alden.models.RegistroAcceso
-import com.example.alden.models.Rol
 import com.example.alden.models.Ubicacion
-import java.time.LocalDateTime
 import com.example.alden.presentation.MainViewModel
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.alden.di.Singletons
 import com.example.alden.flow.attendance.AttendanceRepositoryImpl
 import com.example.alden.flow.auth.AuthSourceImpl
 import com.example.alden.flow.location.LocationSourceImpl
@@ -34,23 +32,28 @@ import kotlinx.coroutines.launch
 
 class RegistroActivity : AppCompatActivity() {
 
-    private lateinit var time: TimeSource
+    private val time: TimeSource = Singletons.time
 
     // Creamos las mismas dependencias que en MainActivity y construimos el ViewModel
     private val viewModel: MainViewModel by viewModels {
-        val auth = AuthSourceImpl()
-        val location = LocationSourceImpl(Ubicacion.DENTRO_RANGO)
-        time = TimeSourceImpl()
-        val attendance = AttendanceRepositoryImpl()
-        val policy = PolicyEngine(auth, location, time)
-        MainViewModelFactory(auth, location, time, attendance, policy)
+        MainViewModelFactory(
+            Singletons.auth,
+            Singletons.location,
+            Singletons.time,
+            Singletons.attendance,
+            Singletons.policy
+        )
     }
 
     private lateinit var adapter: RegistroAdapter
+    private var updatingFromVm = false  // evita loops entre VM y UI
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registro)
+
+        val swZona = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.swZona)
+
 
         // 1) Recuperar usuario del Intent y loguearlo en el ViewModel
         val userId = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
@@ -84,6 +87,12 @@ class RegistroActivity : AppCompatActivity() {
             finish()
         }
 
+        // Listener: usuario mueve el switch -> actualiza zona en VM
+        swZona.setOnCheckedChangeListener { _, checked ->
+            if (updatingFromVm) return@setOnCheckedChangeListener
+            viewModel.setZone(if (checked) Ubicacion.DENTRO_RANGO else Ubicacion.FUERA_RANGO)
+        }
+
         // 3) Observa el estado agregado y los eventos del ViewModel
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -104,6 +113,20 @@ class RegistroActivity : AppCompatActivity() {
                                 Toast.makeText(this@RegistroActivity, "${ev.title}: ${ev.body}", Toast.LENGTH_SHORT).show()
                             }
                         }
+                    }
+                }
+                launch {
+                    viewModel.appState.collect { st ->
+                        // Actualiza texto y posición del switch según la VM (sin disparar listener)
+                        updatingFromVm = true
+                        val dentro = (st.ubicacion == Ubicacion.DENTRO_RANGO)
+                        if (swZona.isChecked != dentro) swZona.isChecked = dentro
+                        swZona.text = if (dentro) "Dentro de rango" else "Fuera de rango"
+                        updatingFromVm = false
+
+                        // habilita/inhabilita botones según política
+                        // findViewById<Button>(R.id.btnEntrada).isEnabled = st.puedeRegistrar
+                        // findViewById<Button>(R.id.btnSalida).isEnabled  = st.puedeRegistrar
                     }
                 }
             }

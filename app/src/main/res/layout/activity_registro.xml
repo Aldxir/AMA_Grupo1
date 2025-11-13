@@ -20,6 +20,13 @@
         android:text="HABILITADO"
         android:layout_marginTop="6dp" />
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swZona"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dentro de rango"
+        android:layout_marginTop="8dp"/>
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
