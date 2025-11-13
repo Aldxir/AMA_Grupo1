@@ -39,5 +39,5 @@ Se ejecutaron los siguientes casos de prueba para validar la implementación de 
 ![Funcionalidad](./captura3.png)
 
 # 📲 Archivo APK generado
-`Alden_04.apk`
+`Alden_05.apk`
 
