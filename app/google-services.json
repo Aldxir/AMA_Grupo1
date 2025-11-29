@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "498441069384",
-    "project_id": "alden-bba7d",
-    "storage_bucket": "alden-bba7d.firebasestorage.app"
+    "project_number": "187758172280",
+    "project_id": "alden-386d9",
+    "storage_bucket": "alden-386d9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:498441069384:android:98202caf2a6fa2b368097d",
+        "mobilesdk_app_id": "1:187758172280:android:5f3de99e2d1ffa7778f58d",
         "android_client_info": {
           "package_name": "com.example.alden"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAnyr9qgD6DpP2gaglbD8kTFhbfLreAPJU"
+          "current_key": "AIzaSyA1s3YivKercxaI4cARTq5jCZLvT-riSYw"
         }
       ],
       "services": {
