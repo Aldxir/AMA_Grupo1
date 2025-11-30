@@ -28,11 +28,21 @@ import com.example.alden.flow.time.TimeSource
 import com.example.alden.flow.time.TimeSourceImpl
 import com.example.alden.presentation.MainViewModelFactory
 import com.example.alden.presentation.state.AppEvent
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import android.widget.ImageView
+import com.bumptech.glide.Glide
+
 
 class RegistroActivity : AppCompatActivity() {
 
     private val time: TimeSource = Singletons.time
+    private lateinit var tvUserName: TextView
+    private lateinit var tvUserEmail: TextView
+    private lateinit var btnCerrarSesion: Button
+    private var imgUserPhoto: ImageView? = null
+
+
 
     // Creamos las mismas dependencias que en MainActivity y construimos el ViewModel
     private val viewModel: MainViewModel by viewModels {
@@ -52,22 +62,85 @@ class RegistroActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registro)
 
+        // Referencias a las vistas de usuario
+        tvUserName = findViewById(R.id.tvUserName)
+        tvUserEmail = findViewById(R.id.tvUserEmail)
+        btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
+        imgUserPhoto = findViewById(R.id.imgUserPhoto)
+
+        // 1) Intentar leer los extras del login clásico
+        val extraUserId   = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
+        val extraUserName = intent.getStringExtra(LoginActivity.EXTRA_USER_NAME)
+        val extraUserRol  = intent.getStringExtra(LoginActivity.EXTRA_USER_ROL)
+
+        // 2) Leer el usuario de Firebase (para login con Google)
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+
+        // 3) Validar sesión:
+        //    - Si NO hay extras y TAMPOCO hay usuario de Firebase -> sesión inválida
+        if (extraUserId == null && firebaseUser == null) {
+            Toast.makeText(this, "Sesión inválida", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        // 4) Decidir qué nombre/correo mostrar
+        val nombreMostrado = when {
+            extraUserName != null -> extraUserName
+            firebaseUser?.displayName != null -> firebaseUser.displayName
+            else -> "Usuario"
+        }
+
+        val correoMostrado = firebaseUser?.email ?: "Sin correo"
+
+        tvUserName.text = nombreMostrado
+        tvUserEmail.text = correoMostrado
+
+        // 5) Foto de perfil (solo si viene de Google y hay photoUrl)
+        val photoUrl = firebaseUser?.photoUrl
+        if (photoUrl != null && imgUserPhoto != null) {
+            Glide.with(this)
+                .load(photoUrl)
+                .placeholder(R.drawable.ic_person_background)
+                .circleCrop()
+                .into(imgUserPhoto!!)
+        }
+
+        btnCerrarSesion.setOnClickListener {
+            // 1) Lógica de tu app (usuario del repo / VM)
+            viewModel.logout()
+
+            // 2) Cerrar sesión en Firebase (Google)
+            FirebaseAuth.getInstance().signOut()
+
+            // 3) Volver al login limpiando el back stack
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+
         val swZona = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.swZona)
 
 
-        // 1) Recuperar usuario del Intent y loguearlo en el ViewModel
+        // 1) Recuperar usuario del Intent (solo login clásico)
         val userId = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
         val usuario = userId?.let { UserRepository.findById(it) }
-        if (usuario == null) {
-            Toast.makeText(this, "Sesión inválida", Toast.LENGTH_SHORT).show()
-            finish(); return
-        }
-        viewModel.loginAsAdminOrUser(usuario)
 
         // 2) UI
         val tvHeader = findViewById<TextView>(R.id.tvHeader)
         val tvEstado = findViewById<TextView>(R.id.tvEstado)
-        tvHeader.text = "${usuario.nombre} (${usuario.rol.name})"
+
+        if (usuario != null) {
+            // Caso login clásico con UserRepository
+            viewModel.loginAsAdminOrUser(usuario)
+            tvHeader.text = "${usuario.nombre} (${usuario.rol.name})"
+        } else {
+            // Caso login con Google (sin usuario en el repo)
+            tvHeader.text = "$nombreMostrado (Google)"
+            // aquí NO cerramos la activity, ya validamos antes que firebaseUser != null
+        }
 
         adapter = RegistroAdapter()
         findViewById<RecyclerView>(R.id.rvRegistros).apply {
@@ -80,11 +153,6 @@ class RegistroActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btnSalida).setOnClickListener {
             viewModel.registrar(Accion.SALIDA)
-        }
-        findViewById<Button>(R.id.btnCerrarSesion).setOnClickListener {
-            viewModel.logout()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
         }
 
         // Listener: usuario mueve el switch -> actualiza zona en VM
