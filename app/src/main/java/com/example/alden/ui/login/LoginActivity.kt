@@ -10,16 +10,18 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.alden.R
+import com.example.alden.auth.AuthSession
 import com.example.alden.data.UserRepository
 import com.example.alden.ui.registro.RegistroActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.SignInButton
-import com.google.firebase.auth.FirebaseAuth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.example.alden.di.Singletons
+
 
 
 class LoginActivity : AppCompatActivity() {
@@ -28,7 +30,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etContrasena: EditText
     private lateinit var btnLogin: Button
     private lateinit var tvMensaje: TextView
-    private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var btnGoogle: SignInButton
 
@@ -48,8 +49,6 @@ class LoginActivity : AppCompatActivity() {
         tvMensaje = findViewById(R.id.tvMensaje)
         btnGoogle = findViewById(R.id.btnGoogleSignIn)
 
-        // FirebaseAuth
-        auth = FirebaseAuth.getInstance()
 
         // Configurar Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -93,6 +92,12 @@ class LoginActivity : AppCompatActivity() {
 
         val usuarioAutenticado = UserRepository.autenticarPorCorreo(emailInput, passInput)
         if (usuarioAutenticado != null) {
+            // 1) Registrar la sesión LOCAL en el SessionManager
+            Singletons.session.onLocalLoginSuccess(
+                userId = usuarioAutenticado.id.toString(),   // o sin toString() si es String
+                email = emailInput,                          // o el campo correo del usuario si lo tienes
+                displayName = usuarioAutenticado.nombre
+            )
             val intent = Intent(this, RegistroActivity::class.java).apply {
                 putExtra(EXTRA_USER_ID, usuarioAutenticado.id)          // id interno
                 putExtra(EXTRA_USER_NAME, usuarioAutenticado.nombre)
@@ -131,9 +136,16 @@ class LoginActivity : AppCompatActivity() {
 
     private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-        auth.signInWithCredential(credential)
+        AuthSession.auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    // 1) Obtener el usuario de Firebase
+                    val firebaseUser = AuthSession.auth.currentUser
+                    if (firebaseUser != null) {
+                        // 2) Registrar la sesión GOOGLE en el SessionManager
+                        Singletons.session.onGoogleLoginSuccess(firebaseUser)
+                    }
+
                     // Login con Google correcto → ir a RegistroActivity (pantalla principal)
                     val intent = Intent(this, RegistroActivity::class.java)
                     startActivity(intent)
@@ -143,16 +155,4 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
     }
-
-    override fun onStart() {
-        super.onStart()
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) {
-            // Ya hay sesión activa (por Google)
-            val intent = Intent(this, RegistroActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-    }
-
 }

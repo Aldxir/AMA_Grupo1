@@ -20,18 +20,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.alden.di.Singletons
-import com.example.alden.flow.attendance.AttendanceRepositoryImpl
-import com.example.alden.flow.auth.AuthSourceImpl
-import com.example.alden.flow.location.LocationSourceImpl
-import com.example.alden.flow.policy.PolicyEngine
 import com.example.alden.flow.time.TimeSource
-import com.example.alden.flow.time.TimeSourceImpl
 import com.example.alden.presentation.MainViewModelFactory
 import com.example.alden.presentation.state.AppEvent
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.example.alden.auth.AuthSession
+import com.example.alden.auth.GoogleAuthMapper
+
 
 
 class RegistroActivity : AppCompatActivity() {
@@ -74,7 +71,7 @@ class RegistroActivity : AppCompatActivity() {
         val extraUserRol  = intent.getStringExtra(LoginActivity.EXTRA_USER_ROL)
 
         // 2) Leer el usuario de Firebase (para login con Google)
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        val firebaseUser = AuthSession.currentUser
 
         // 3) Validar sesión:
         //    - Si NO hay extras y TAMPOCO hay usuario de Firebase -> sesión inválida
@@ -108,15 +105,17 @@ class RegistroActivity : AppCompatActivity() {
         }
 
         btnCerrarSesion.setOnClickListener {
-            // 1) Lógica de tu app (usuario del repo / VM)
-            viewModel.logout()
+            // Mensaje de confirmación
+            Toast.makeText(this, "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show()
 
-            // 2) Cerrar sesión en Firebase (Google)
-            FirebaseAuth.getInstance().signOut()
+            // 1) Cerrar sesión en SessionManager (FirebaseAuth + prefs locales)
+            Singletons.session.logout()
 
-            // 3) Volver al login limpiando el back stack
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            // 2) Ir a LoginActivity y limpiar el back stack
+            val intent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+
             startActivity(intent)
             finish()
         }
@@ -136,10 +135,17 @@ class RegistroActivity : AppCompatActivity() {
             // Caso login clásico con UserRepository
             viewModel.loginAsAdminOrUser(usuario)
             tvHeader.text = "${usuario.nombre} (${usuario.rol.name})"
+        } else if (firebaseUser != null) {
+            // Caso login con Google: crear Usuario equivalente
+            val usuarioGoogle = GoogleAuthMapper.toUsuario(firebaseUser)
+
+            // Loguear también en el ViewModel para habilitar registros de asistencia
+            viewModel.loginAsAdminOrUser(usuarioGoogle)
+
+            tvHeader.text = "${usuarioGoogle.nombre} (${usuarioGoogle.rol.name})"
+
         } else {
-            // Caso login con Google (sin usuario en el repo)
-            tvHeader.text = "$nombreMostrado (Google)"
-            // aquí NO cerramos la activity, ya validamos antes que firebaseUser != null
+            tvHeader.text = "Sesión desconocida"
         }
 
         adapter = RegistroAdapter()
@@ -201,8 +207,27 @@ class RegistroActivity : AppCompatActivity() {
         }
     }
 
+    private fun verificarSesionActiva() {
+        val session = Singletons.session.getSessionInfo()
+        if (!session.isLoggedIn) {
+            Toast.makeText(
+                this,
+                "Tu sesión ha caducado. Inicia sesión nuevamente.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            val intent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+        }
+    }
+
+
     override fun onStart() {
         super.onStart()
+        verificarSesionActiva()
         // Igual que en MainActivity
         time.start(1000L)
     }
