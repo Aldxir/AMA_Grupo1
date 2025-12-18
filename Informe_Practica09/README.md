@@ -37,8 +37,8 @@ A continuación se detallan las pruebas realizadas para verificar el correcto fu
 
 
 ### Capturas
-![Funcionalidad](./captura1.png)
-![Funcionalidad](./captura2.png)
+![Funcionalidad](./captura1.jpg)
+![Funcionalidad](./captura2.jpg)
 
 
 # 📲 Archivo APK generado
