@@ -29,8 +29,8 @@ La siguiente tabla resume el esquema de permisos implementado en el módulo de c
 * [cite_start]Es aconsejable mantener la validación de sesión al inicio de cada *Activity* protegida (`onStart` o `onCreate`) para redirigir al Login inmediatamente si la sesión ha caducado o es inválida[cite: 45].
 * [cite_start]Se sugiere implementar retroalimentación visual clara (como mensajes *Toast*) cuando se deniega una acción por falta de privilegios, mejorando la experiencia de usuario y clarificando las restricciones de seguridad[cite: 47].
 ### Capturas
-![Funcionalidad](./captura1.png)
-![Funcionalidad](./captura2.png)
+![Funcionalidad](./captura1.jpg)
+![Funcionalidad](./captura2.jpg)
 
 
 # 📲 Archivo APK generado
