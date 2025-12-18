@@ -47,6 +47,8 @@ class MainViewModel(
     val events: SharedFlow<AppEvent> = _events.asSharedFlow()
 
     // Estado agregado de la pantalla como StateFlow
+    // Cumple req: "Usuario estándar intentando ver registros del Admin -> acceso denegado"
+    // mediante el filtrado en la variable 'visibles'.
     val appState: StateFlow<AppState> = combine(
         authSource.userFlow,
         locationSource.zoneFlow,
@@ -54,10 +56,12 @@ class MainViewModel(
         attendanceRepository.recordsFlow,
         canRegisterState
     ) { user, zone, now, records, canReg ->
+
+        // Lógica de visualización segura por ROL
         val visibles = when {
             user == null -> emptyList()
-            user.rol == Rol.ADMIN -> records                             // Admin ve todo
-            else -> records.filter { it.usuario.id == user.id }          // User solo los suyos
+            user.rol == Rol.ADMIN -> records                             // Admin ve todo [cite: 18]
+            else -> records.filter { it.usuario.id == user.id }          // User solo los suyos [cite: 17]
         }.sortedByDescending { it.hora }
 
         AppState(
@@ -106,13 +110,13 @@ class MainViewModel(
         val nowDateTime = LocalDateTime.now()
         val canReg = canRegisterState.value
 
-        // Regla: Admin no registra asistencias
+        // Cumple req: "Admin intentando registrar asistencia -> acceso denegado"
         if (user?.rol == Rol.ADMIN) {
-            _events.tryEmit(AppEvent.ShowToast("El administrador no registra asistencias"))
+            _events.tryEmit(AppEvent.ShowToast("Acceso denegado: El administrador solo puede visualizar registros."))
             _events.tryEmit(
                 AppEvent.Notify(
-                    title = "Alerta",
-                    body = "Intento de registro bloqueado (perfil Admin)",
+                    title = "Alerta de Seguridad",
+                    body = "Intento de registro no autorizado (Rol ADMIN)",
                     channel = NotificationChannelType.ALERTAS
                 )
             )
@@ -124,7 +128,7 @@ class MainViewModel(
             _events.tryEmit(
                 AppEvent.Notify(
                     title = "Alerta",
-                    body = "No hay usuario autenticado",
+                    body = "Intento de acceso anónimo bloqueado",
                     channel = NotificationChannelType.ALERTAS
                 )
             )
@@ -180,5 +184,4 @@ class MainViewModel(
             else -> "Política no satisfecha"
         }
     }
-
 }

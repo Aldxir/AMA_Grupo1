@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "187758172280",
+    "project_id": "alden-386d9",
+    "storage_bucket": "alden-386d9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:187758172280:android:5f3de99e2d1ffa7778f58d",
+        "android_client_info": {
+          "package_name": "com.example.alden"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "187758172280-7cd1n1hofkkupg9i3gv0qa099udde5th.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.alden",
+            "certificate_hash": "6acc0debe3e71c7be5f581d2cf88da9f1607d06f"
+          }
+        },
+        {
+          "client_id": "187758172280-o4l3iake2klqffcqv7m1i8cjj1vdi862.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1s3YivKercxaI4cARTq5jCZLvT-riSYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "187758172280-o4l3iake2klqffcqv7m1i8cjj1vdi862.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

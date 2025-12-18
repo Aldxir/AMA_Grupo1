@@ -2,34 +2,35 @@ package com.example.alden.ui.registro
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.example.alden.R
-import com.example.alden.ui.login.LoginActivity
-import android.widget.TextView
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.alden.ui.RegistroAdapter
-import androidx.recyclerview.widget.RecyclerView
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
-import com.example.alden.data.UserRepository
-import com.example.alden.models.Accion
-import com.example.alden.models.Ubicacion
-import com.example.alden.presentation.MainViewModel
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.alden.di.Singletons
-import com.example.alden.flow.time.TimeSource
-import com.example.alden.presentation.MainViewModelFactory
-import com.example.alden.presentation.state.AppEvent
-import kotlinx.coroutines.launch
-import android.widget.ImageView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.alden.R
+import com.example.alden.accesscontrol.ScreenGuard // [IMPORTANTE] Nuevo módulo de seguridad
 import com.example.alden.auth.AuthSession
 import com.example.alden.auth.GoogleAuthMapper
-
-
+import com.example.alden.data.UserRepository
+import com.example.alden.di.Singletons
+import com.example.alden.flow.time.TimeSource
+import com.example.alden.models.Accion
+import com.example.alden.models.Rol
+import com.example.alden.models.Ubicacion
+import com.example.alden.models.Usuario
+import com.example.alden.presentation.MainViewModel
+import com.example.alden.presentation.MainViewModelFactory
+import com.example.alden.presentation.state.AppEvent
+import com.example.alden.ui.RegistroAdapter
+import com.example.alden.ui.login.LoginActivity
+import kotlinx.coroutines.launch
 
 class RegistroActivity : AppCompatActivity() {
 
@@ -38,8 +39,6 @@ class RegistroActivity : AppCompatActivity() {
     private lateinit var tvUserEmail: TextView
     private lateinit var btnCerrarSesion: Button
     private var imgUserPhoto: ImageView? = null
-
-
 
     // Creamos las mismas dependencias que en MainActivity y construimos el ViewModel
     private val viewModel: MainViewModel by viewModels {
@@ -64,31 +63,33 @@ class RegistroActivity : AppCompatActivity() {
         tvUserEmail = findViewById(R.id.tvUserEmail)
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion)
         imgUserPhoto = findViewById(R.id.imgUserPhoto)
+        val swZona = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.swZona)
+        val tvHeader = findViewById<TextView>(R.id.tvHeader)
+        val tvEstado = findViewById<TextView>(R.id.tvEstado)
+        val btnEntrada = findViewById<Button>(R.id.btnEntrada)
+        val btnSalida = findViewById<Button>(R.id.btnSalida)
 
         // 1) Intentar leer los extras del login clásico
         val extraUserId   = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
         val extraUserName = intent.getStringExtra(LoginActivity.EXTRA_USER_NAME)
-        val extraUserRol  = intent.getStringExtra(LoginActivity.EXTRA_USER_ROL)
+        // val extraUserRol  = intent.getStringExtra(LoginActivity.EXTRA_USER_ROL) // No estrictamente necesario si recuperamos el obj Usuario
 
         // 2) Leer el usuario de Firebase (para login con Google)
         val firebaseUser = AuthSession.currentUser
 
-        // 3) Validar sesión:
-        //    - Si NO hay extras y TAMPOCO hay usuario de Firebase -> sesión inválida
+        // 3) Validar sesión básica inicial (Redundancia de seguridad)
         if (extraUserId == null && firebaseUser == null) {
-            Toast.makeText(this, "Sesión inválida", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            // Si falla la lógica manual, ScreenGuard lo atrapará más abajo, pero esto es un fail-safe rápido.
+            ScreenGuard.redirectToLogin(this)
             return
         }
 
-        // 4) Decidir qué nombre/correo mostrar
+        // 4) UI: Decidir qué nombre/correo mostrar
         val nombreMostrado = when {
             extraUserName != null -> extraUserName
             firebaseUser?.displayName != null -> firebaseUser.displayName
             else -> "Usuario"
         }
-
         val correoMostrado = firebaseUser?.email ?: "Sin correo"
 
         tvUserName.text = nombreMostrado
@@ -104,60 +105,68 @@ class RegistroActivity : AppCompatActivity() {
                 .into(imgUserPhoto!!)
         }
 
-        btnCerrarSesion.setOnClickListener {
-            // Mensaje de confirmación
-            Toast.makeText(this, "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show()
+        // =================================================================
+        // LÓGICA DE USUARIO Y SEGURIDAD (PRÁCTICA 08)
+        // =================================================================
 
-            // 1) Cerrar sesión en SessionManager (FirebaseAuth + prefs locales)
-            Singletons.session.logout()
+        // Variable para almacenar el objeto Usuario de dominio final
+        var usuarioFinal: Usuario? = null
 
-            // 2) Ir a LoginActivity y limpiar el back stack
-            val intent = Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-
-            startActivity(intent)
-            finish()
-        }
-
-        val swZona = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.swZona)
-
-
-        // 1) Recuperar usuario del Intent (solo login clásico)
+        // A) Recuperar usuario del Intent (Login Local)
         val userId = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
-        val usuario = userId?.let { UserRepository.findById(it) }
+        val usuarioLocal = userId?.let { UserRepository.findById(it) }
 
-        // 2) UI
-        val tvHeader = findViewById<TextView>(R.id.tvHeader)
-        val tvEstado = findViewById<TextView>(R.id.tvEstado)
-
-        if (usuario != null) {
-            // Caso login clásico con UserRepository
-            viewModel.loginAsAdminOrUser(usuario)
-            tvHeader.text = "${usuario.nombre} (${usuario.rol.name})"
-        } else if (firebaseUser != null) {
-            // Caso login con Google: crear Usuario equivalente
+        if (usuarioLocal != null) {
+            usuarioFinal = usuarioLocal
+            tvHeader.text = "${usuarioLocal.nombre} (${usuarioLocal.rol.name})"
+        }
+        // B) Recuperar usuario de Firebase (Login Google)
+        else if (firebaseUser != null) {
             val usuarioGoogle = GoogleAuthMapper.toUsuario(firebaseUser)
-
-            // Loguear también en el ViewModel para habilitar registros de asistencia
-            viewModel.loginAsAdminOrUser(usuarioGoogle)
-
+            usuarioFinal = usuarioGoogle
             tvHeader.text = "${usuarioGoogle.nombre} (${usuarioGoogle.rol.name})"
-
         } else {
             tvHeader.text = "Sesión desconocida"
         }
 
+        // --- INICIO IMPLEMENTACIÓN ACCESSCONTROL ---
+
+        // 1. Validar Sesión con ScreenGuard
+        // Si usuarioFinal es null, redirige a Login y mata la activity
+        if (!ScreenGuard.validateSession(this, usuarioFinal)) {
+            return
+        }
+
+        // 2. Aplicar Protección Visual (FLAG_SECURE) si es necesario (Admin)
+        ScreenGuard.applyVisualProtection(this, usuarioFinal)
+
+        // 3. Restricción de UI por Rol
+        // Si es Admin, deshabilitamos botones de registro (solo visualización)
+        if (usuarioFinal?.rol == Rol.ADMIN) {
+            btnEntrada.isEnabled = false
+            btnSalida.isEnabled = false
+            btnEntrada.alpha = 0.5f // Efecto visual de deshabilitado
+            btnSalida.alpha = 0.5f
+        }
+
+        // --- FIN IMPLEMENTACIÓN ACCESSCONTROL ---
+
+        // Notificar al ViewModel quién es el usuario actual para que inicie los flujos
+        usuarioFinal?.let { viewModel.loginAsAdminOrUser(it) }
+
+
+        // Configuración RecyclerView
         adapter = RegistroAdapter()
         findViewById<RecyclerView>(R.id.rvRegistros).apply {
             layoutManager = LinearLayoutManager(this@RegistroActivity)
             adapter = this@RegistroActivity.adapter
         }
 
-        findViewById<Button>(R.id.btnEntrada).setOnClickListener {
+        // Listeners de botones
+        btnEntrada.setOnClickListener {
             viewModel.registrar(Accion.ENTRADA)
         }
-        findViewById<Button>(R.id.btnSalida).setOnClickListener {
+        btnSalida.setOnClickListener {
             viewModel.registrar(Accion.SALIDA)
         }
 
@@ -165,6 +174,21 @@ class RegistroActivity : AppCompatActivity() {
         swZona.setOnCheckedChangeListener { _, checked ->
             if (updatingFromVm) return@setOnCheckedChangeListener
             viewModel.setZone(if (checked) Ubicacion.DENTRO_RANGO else Ubicacion.FUERA_RANGO)
+        }
+
+        // Listener Cerrar Sesión (Cumple requisito de limpiar Back Stack)
+        btnCerrarSesion.setOnClickListener {
+            Toast.makeText(this, "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show()
+
+            // 1) Cerrar sesión en SessionManager
+            Singletons.session.logout()
+
+            // 2) Ir a LoginActivity y limpiar el back stack
+            val intent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
         }
 
         // 3) Observa el estado agregado y los eventos del ViewModel
@@ -183,7 +207,6 @@ class RegistroActivity : AppCompatActivity() {
                             is AppEvent.ShowToast ->
                                 Toast.makeText(this@RegistroActivity, ev.message, Toast.LENGTH_SHORT).show()
                             is AppEvent.Notify -> {
-                                // Si quieres, aquí puedes usar tu NotificationGatewayLocal
                                 Toast.makeText(this@RegistroActivity, "${ev.title}: ${ev.body}", Toast.LENGTH_SHORT).show()
                             }
                         }
@@ -198,9 +221,8 @@ class RegistroActivity : AppCompatActivity() {
                         swZona.text = if (dentro) "Dentro de rango" else "Fuera de rango"
                         updatingFromVm = false
 
-                        // habilita/inhabilita botones según política
-                        // findViewById<Button>(R.id.btnEntrada).isEnabled = st.puedeRegistrar
-                        // findViewById<Button>(R.id.btnSalida).isEnabled  = st.puedeRegistrar
+                        // NOTA: La lógica de habilitar botones ahora se maneja arriba con el Rol (ScreenGuard/Lógica manual)
+                        // y con el estado 'puedeRegistrar' si quisieras feedback en tiempo real.
                     }
                 }
             }
@@ -208,27 +230,16 @@ class RegistroActivity : AppCompatActivity() {
     }
 
     private fun verificarSesionActiva() {
+        // Doble chequeo usando SessionManager, útil si la app se reanuda después de mucho tiempo
         val session = Singletons.session.getSessionInfo()
         if (!session.isLoggedIn) {
-            Toast.makeText(
-                this,
-                "Tu sesión ha caducado. Inicia sesión nuevamente.",
-                Toast.LENGTH_LONG
-            ).show()
-
-            val intent = Intent(this, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            startActivity(intent)
-            finish()
+            ScreenGuard.redirectToLogin(this)
         }
     }
-
 
     override fun onStart() {
         super.onStart()
         verificarSesionActiva()
-        // Igual que en MainActivity
         time.start(1000L)
     }
 
