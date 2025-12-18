@@ -31,6 +31,7 @@ import com.example.alden.presentation.state.AppEvent
 import com.example.alden.ui.RegistroAdapter
 import com.example.alden.ui.login.LoginActivity
 import kotlinx.coroutines.launch
+import com.example.alden.ui.rating.RatingActivity
 
 class RegistroActivity : AppCompatActivity() {
 
@@ -226,6 +227,10 @@ class RegistroActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+        findViewById<Button>(R.id.btnIrRating).setOnClickListener {
+            val intent = Intent(this, RatingActivity::class.java)
+            startActivity(intent)
         }
     }
 

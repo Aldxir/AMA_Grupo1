@@ -94,5 +94,12 @@
         android:layout_height="wrap_content"
         android:text="Cerrar sesión"
         android:layout_marginTop="12dp" />
+    <Button
+        android:id="@+id/btnIrRating"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Calificar experiencia"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.AppCompat.Button.Colored"/>
 </LinearLayout>
 

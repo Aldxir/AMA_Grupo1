@@ -13,6 +13,7 @@ import com.example.alden.flow.time.TimeSourceImpl
 import com.example.alden.models.Ubicacion
 import com.google.firebase.auth.FirebaseAuth
 import com.example.alden.session.SessionManager
+import com.example.alden.ui.rating.RatingRepository
 
 object Singletons {
     // Contexto de aplicación para poder crear SessionManager y otros que lo requieran
@@ -40,4 +41,7 @@ object Singletons {
     val time: TimeSource by lazy { TimeSourceImpl() }
     val attendance: AttendanceRepository by lazy { AttendanceRepositoryImpl() }
     val policy: PolicyEngine by lazy { PolicyEngine(auth, location, time) }
+    val ratingRepo: RatingRepository by lazy {
+        RatingRepository(appContext)
+    }
 }
