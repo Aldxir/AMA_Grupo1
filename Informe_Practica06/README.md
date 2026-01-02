@@ -1,6 +1,6 @@
 # Alden (App de Asistencia)
 
-## Descripción de la Práctica
+## Descripción de la Práctica 6
 
 El objetivo de esta práctica fue integrar **Google Sign-In** con **Firebase Authentication** en la aplicación "Alden" para gestionar el inicio y cierre de sesión de usuarios mediante sus credenciales de Google.
 
