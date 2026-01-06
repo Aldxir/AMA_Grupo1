@@ -41,7 +41,7 @@ object Singletons {
     val time: TimeSource by lazy { TimeSourceImpl() }
     val attendance: AttendanceRepository by lazy { AttendanceRepositoryImpl() }
     val policy: PolicyEngine by lazy { PolicyEngine(auth, location, time) }
-    val ratingRepo: RatingRepository by lazy {
-        RatingRepository(appContext)
+    val ratingRepo: com.example.alden.ui.rating.RatingRepository by lazy {
+        com.example.alden.ui.rating.RatingRepository(appContext)
     }
 }
