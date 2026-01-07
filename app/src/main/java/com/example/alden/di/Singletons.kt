@@ -14,6 +14,7 @@ import com.example.alden.models.Ubicacion
 import com.google.firebase.auth.FirebaseAuth
 import com.example.alden.session.SessionManager
 import com.example.alden.ui.rating.RatingRepository
+import com.example.alden.charts.data.StatsStore
 
 object Singletons {
     // Contexto de aplicación para poder crear SessionManager y otros que lo requieran
@@ -44,4 +45,8 @@ object Singletons {
     val ratingRepo: com.example.alden.ui.rating.RatingRepository by lazy {
         com.example.alden.ui.rating.RatingRepository(appContext)
     }
+    val statsStore: StatsStore by lazy {
+        StatsStore(appContext)
+    }
+
 }

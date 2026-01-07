@@ -64,6 +64,12 @@
             android:label="Reporte de Ratings"
             android:parentActivityName=".ui.registro.RegistroActivity"/>
 
+        <activity
+            android:name=".charts.ui.ChartsActivity"
+            android:exported="false"
+            android:label="Estadísticas"
+            android:parentActivityName=".ui.registro.RegistroActivity" />
+
     </application>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

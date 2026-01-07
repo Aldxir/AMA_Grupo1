@@ -34,6 +34,7 @@ import com.example.alden.ui.RegistroAdapter
 import com.example.alden.ui.login.LoginActivity
 import com.example.alden.ui.rating.AdminRatingsActivity
 import com.example.alden.ui.rating.RatingActivity
+import com.example.alden.charts.ui.ChartsActivity
 import kotlinx.coroutines.launch
 
 class RegistroActivity : AppCompatActivity() {
@@ -126,6 +127,9 @@ class RegistroActivity : AppCompatActivity() {
 
         usuarioFinal?.let { viewModel.loginAsAdminOrUser(it) }
 
+        // --- Graficos
+        val cardCharts = findViewById<CardView>(R.id.cardCharts)
+
         // --- 5. LISTENERS ---
         cardEntrada.setOnClickListener { viewModel.registrar(Accion.ENTRADA) }
         cardSalida.setOnClickListener { viewModel.registrar(Accion.SALIDA) }
@@ -149,6 +153,10 @@ class RegistroActivity : AppCompatActivity() {
 
         swZona.setOnCheckedChangeListener { _, checked ->
             if (!updatingFromVm) viewModel.setZone(if (checked) Ubicacion.DENTRO_RANGO else Ubicacion.FUERA_RANGO)
+        }
+
+        cardCharts.setOnClickListener {
+            startActivity(Intent(this, ChartsActivity::class.java))
         }
 
         // --- 6. LISTA ---

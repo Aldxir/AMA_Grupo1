@@ -2,6 +2,7 @@ package com.example.alden.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.alden.di.Singletons
 import com.example.alden.flow.attendance.AttendanceRepository
 import com.example.alden.flow.auth.AuthSource
 import com.example.alden.flow.location.LocationSource
@@ -144,6 +145,7 @@ class MainViewModel(
                 hora = nowDateTime
             )
             attendanceRepository.add(registro)
+            Singletons.statsStore.addAsistencia()
 
             _events.tryEmit(
                 AppEvent.Notify(
@@ -156,6 +158,7 @@ class MainViewModel(
         } else {
             // Determinar causa para mensaje/alerta
             val reason = computeBlockReason(userEnabled = user.enabled, zone, nowTime)
+            Singletons.statsStore.addInasistencia()
             _events.tryEmit(AppEvent.ShowToast("DESHABILITADO: $reason"))
             _events.tryEmit(
                 AppEvent.Notify(
