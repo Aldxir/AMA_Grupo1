@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.example.alden.R
 import com.example.alden.accesscontrol.ScreenGuard
+import com.example.alden.animations.transitions.TransitionNavigator
 import com.example.alden.di.Singletons
 import com.example.alden.charts.views.BarChartView
 import com.example.alden.charts.views.LineChartView
@@ -99,4 +100,11 @@ class ChartsActivity : AppCompatActivity() {
         tvResumen.text =
             "Asistencias: ${totals.asistencias}   |   Inasistencias: ${totals.inasistencias}   |   %: ${percent}%"
     }
+
+    override fun finish() {
+        super.finish()
+        val type = TransitionNavigator.run { readTransitionType() }
+        TransitionNavigator.run { applyFinishTransition(type) }
+    }
+
 }

@@ -18,6 +18,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.alden.R
 import com.example.alden.accesscontrol.ScreenGuard
+import com.example.alden.animations.effects.ViewAnimations
+import com.example.alden.animations.transitions.TransitionNavigator
+import com.example.alden.animations.transitions.TransitionType
+import com.example.alden.animations.ui.AnimationsActivity
+import com.example.alden.animations.ui.DetailActivity
 import com.example.alden.auth.AuthSession
 import com.example.alden.auth.GoogleAuthMapper
 import com.example.alden.data.UserRepository
@@ -36,6 +41,7 @@ import com.example.alden.ui.rating.AdminRatingsActivity
 import com.example.alden.ui.rating.RatingActivity
 import com.example.alden.charts.ui.ChartsActivity
 import kotlinx.coroutines.launch
+import kotlin.run
 
 class RegistroActivity : AppCompatActivity() {
 
@@ -47,6 +53,10 @@ class RegistroActivity : AppCompatActivity() {
     }
     private lateinit var adapter: RegistroAdapter
     private var updatingFromVm = false
+
+    private var lastPressedAction: Accion? = null
+    private var lastPressedView: View? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,9 +140,22 @@ class RegistroActivity : AppCompatActivity() {
         // --- Graficos
         val cardCharts = findViewById<CardView>(R.id.cardCharts)
 
+        val cardAnimations = findViewById<CardView>(R.id.cardAnimations)
+        val cardDetail = findViewById<CardView>(R.id.cardDetail)
+
         // --- 5. LISTENERS ---
-        cardEntrada.setOnClickListener { viewModel.registrar(Accion.ENTRADA) }
-        cardSalida.setOnClickListener { viewModel.registrar(Accion.SALIDA) }
+        cardEntrada.setOnClickListener {
+            lastPressedAction = Accion.ENTRADA
+            lastPressedView = cardEntrada
+            ViewAnimations.press(cardEntrada) { viewModel.registrar(Accion.ENTRADA) }
+        }
+
+        cardSalida.setOnClickListener {
+            lastPressedAction = Accion.SALIDA
+            lastPressedView = cardSalida
+            ViewAnimations.press(cardSalida) { viewModel.registrar(Accion.SALIDA) }
+        }
+
 
         cardRate.setOnClickListener {
             startActivity(Intent(this, RatingActivity::class.java))
@@ -159,6 +182,30 @@ class RegistroActivity : AppCompatActivity() {
             startActivity(Intent(this, ChartsActivity::class.java))
         }
 
+        cardCharts.setOnClickListener {
+            ViewAnimations.press(cardCharts) {
+                val intent = Intent(this, ChartsActivity::class.java)
+                TransitionNavigator.run { launch(intent, TransitionType.FADE) }
+            }
+        }
+
+        cardAnimations.setOnClickListener {
+            ViewAnimations.press(cardAnimations) {
+                val intent = Intent(this, AnimationsActivity::class.java)
+                if (extraUserId != null) intent.putExtra(LoginActivity.EXTRA_USER_ID, extraUserId)
+                TransitionNavigator.run { launch(intent, TransitionType.SCALE) }
+            }
+        }
+
+        cardDetail.setOnClickListener {
+            ViewAnimations.press(cardDetail) {
+                val intent = Intent(this, DetailActivity::class.java)
+                if (extraUserId != null) intent.putExtra(LoginActivity.EXTRA_USER_ID, extraUserId)
+                TransitionNavigator.run { launch(intent, TransitionType.SLIDE) }
+            }
+        }
+
+
         // --- 6. LISTA ---
         adapter = RegistroAdapter()
         findViewById<RecyclerView>(R.id.rvRegistros).apply {
@@ -177,8 +224,42 @@ class RegistroActivity : AppCompatActivity() {
                 }
                 launch {
                     viewModel.events.collect { ev ->
-                        if (ev is AppEvent.ShowToast) Toast.makeText(this@RegistroActivity, ev.message, Toast.LENGTH_SHORT).show()
+                        when (ev) {
+                            is AppEvent.ShowToast -> {
+                                Toast.makeText(this@RegistroActivity, ev.message, Toast.LENGTH_SHORT).show()
+
+                                val view = lastPressedView
+                                val action = lastPressedAction
+
+                                // Solo animamos si el toast viene de un click (Entrada/Salida)
+                                if (view != null && action != null) {
+                                    val msg = ev.message
+
+                                    val success =
+                                        msg.startsWith("Registro", ignoreCase = true) &&
+                                                msg.contains("exitoso", ignoreCase = true)
+
+                                    if (success) {
+                                        ViewAnimations.successPulse(view)
+                                    } else {
+                                        ViewAnimations.errorShake(view)
+                                    }
+
+                                    // Persistimos estado (para que AnimationsActivity lo lea)
+                                    Singletons.animStateStore.writeLastAction(action.name, success)
+
+                                    // limpiamos para no re-animar con otros toasts
+                                    lastPressedView = null
+                                    lastPressedAction = null
+                                }
+                            }
+
+                            is AppEvent.Notify -> {
+                                // No es obligatorio animar aquí (ya existe notificación local)
+                            }
+                        }
                     }
+
                 }
                 launch {
                     viewModel.appState.collect { st ->

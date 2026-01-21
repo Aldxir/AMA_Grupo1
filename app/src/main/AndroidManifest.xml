@@ -70,6 +70,9 @@
             android:label="Estadísticas"
             android:parentActivityName=".ui.registro.RegistroActivity" />
 
+        <activity android:name=".animations.ui.AnimationsActivity" />
+        <activity android:name=".animations.ui.DetailActivity" />
+
     </application>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
