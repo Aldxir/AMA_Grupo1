@@ -42,8 +42,10 @@ import com.example.alden.ui.rating.RatingActivity
 import com.example.alden.charts.ui.ChartsActivity
 import kotlinx.coroutines.launch
 import kotlin.run
+import com.example.alden.ui.location.GeolocationActivity
 
 class RegistroActivity : AppCompatActivity() {
+
 
     private val time: TimeSource = Singletons.time
     private val viewModel: MainViewModel by viewModels {
@@ -78,6 +80,7 @@ class RegistroActivity : AppCompatActivity() {
         val cardRate = findViewById<CardView>(R.id.cardRate)
         val cardAdminRatings = findViewById<CardView>(R.id.cardAdminRatings)
         val cardLogout = findViewById<CardView>(R.id.cardLogout)
+        val cardGeo = findViewById<CardView>(R.id.cardGeo)
 
         // --- 2. RECUPERAR USUARIO ---
         val extraUserId = intent.getStringExtra(LoginActivity.EXTRA_USER_ID)
@@ -117,6 +120,7 @@ class RegistroActivity : AppCompatActivity() {
             cardEntrada.visibility = View.GONE
             cardSalida.visibility = View.GONE
             cardRate.visibility = View.GONE
+            cardGeo.visibility = View.VISIBLE
 
             // Mostrar herramientas de Admin
             cardAdminRatings.visibility = View.VISIBLE
@@ -130,6 +134,7 @@ class RegistroActivity : AppCompatActivity() {
             cardSalida.visibility = View.VISIBLE
             cardRate.visibility = View.VISIBLE
             cardAdminRatings.visibility = View.GONE
+            cardGeo.visibility = View.VISIBLE
 
             // Mostrar controles de simulación
             layoutUserControls.visibility = View.VISIBLE
@@ -203,6 +208,10 @@ class RegistroActivity : AppCompatActivity() {
                 if (extraUserId != null) intent.putExtra(LoginActivity.EXTRA_USER_ID, extraUserId)
                 TransitionNavigator.run { launch(intent, TransitionType.SLIDE) }
             }
+        }
+        cardGeo.setOnClickListener {
+            val intent = Intent(this, GeolocationActivity::class.java)
+            startActivity(intent)
         }
 
 
